@@ -142,7 +142,9 @@ export async function registerRoutes(
           if (updated) user = updated;
         }
 
-        res.json({ user, needsOnboarding: false });
+        // TEMPORARY: Force isPro to true for testing - all features unlocked
+        // TODO: Remove this override - just use: res.json({ user, needsOnboarding: false })
+        res.json({ user: { ...user, isPro: true }, needsOnboarding: false });
       } else {
         // User doesn't exist yet - they need to complete onboarding
         const whopProfile = await getWhopUserProfile(whopUserId);
