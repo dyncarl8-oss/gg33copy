@@ -1751,7 +1751,9 @@ export async function registerRoutes(
         // Find an active membership for our Pro plan
         const proMembership = memberships.data?.find((mem: any) => {
           const isOurPlan = mem.plan?.id === EXPECTED_PLAN_ID;
-          const isActive = mem.status === 'active' || mem.status === 'trialing';
+          // TEMP FOR TESTING: Checking for 'paid' (one-time payment) instead of subscription statuses
+          // TODO: REVERT BACK TO: const isActive = mem.status === 'active' || mem.status === 'trialing';
+          const isActive = mem.status === 'paid' || mem.status === 'active';
           console.log(`[Whop] Membership ${mem.id}: plan=${mem.plan?.id}, status=${mem.status}, isOurPlan=${isOurPlan}, isActive=${isActive}`);
           return isOurPlan && isActive;
         });
@@ -1855,7 +1857,9 @@ export async function registerRoutes(
 
         // Find an active membership for our Pro plan
         const proMembership = memberships.data?.find((mem: any) => {
-          const isActive = mem.status === 'active' || mem.status === 'trialing';
+          // TEMP FOR TESTING: Checking for 'paid' (one-time payment) instead of subscription statuses
+          // TODO: REVERT BACK TO: const isActive = mem.status === 'active' || mem.status === 'trialing';
+          const isActive = mem.status === 'paid' || mem.status === 'active';
           console.log(`[Whop Membership] Membership ${mem.id}: status=${mem.status}, active=${isActive}, manage_url=${mem.manage_url ? 'yes' : 'no'}`);
           return isActive;
         });
