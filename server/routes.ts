@@ -1565,7 +1565,7 @@ export async function registerRoutes(
         return res.status(500).json({ error: "Whop SDK not initialized" });
       }
 
-      const planId = "plan_AE7oozwqXYlcA";
+      const planId = "plan_rp2yShIBnW6LT";
       console.log(`[Whop Checkout] Creating checkout configuration for plan: ${planId}`);
       console.log(`[Whop Checkout] API Key present: ${!!process.env.WHOP_API_KEY}`);
       console.log(`[Whop Checkout] API Key length: ${process.env.WHOP_API_KEY?.length || 0}`);
@@ -1751,9 +1751,7 @@ export async function registerRoutes(
         // Find an active membership for our Pro plan
         const proMembership = memberships.data?.find((mem: any) => {
           const isOurPlan = mem.plan?.id === EXPECTED_PLAN_ID;
-          // TEMP FOR TESTING: Checking for 'paid' (one-time payment) instead of subscription statuses
-          // TODO: REVERT BACK TO: const isActive = mem.status === 'active' || mem.status === 'trialing';
-          const isActive = mem.status === 'paid' || mem.status === 'active';
+          const isActive = mem.status === 'active' || mem.status === 'trialing';
           console.log(`[Whop] Membership ${mem.id}: plan=${mem.plan?.id}, status=${mem.status}, isOurPlan=${isOurPlan}, isActive=${isActive}`);
           return isOurPlan && isActive;
         });
@@ -1857,9 +1855,7 @@ export async function registerRoutes(
 
         // Find an active membership for our Pro plan
         const proMembership = memberships.data?.find((mem: any) => {
-          // TEMP FOR TESTING: Checking for 'paid' (one-time payment) instead of subscription statuses
-          // TODO: REVERT BACK TO: const isActive = mem.status === 'active' || mem.status === 'trialing';
-          const isActive = mem.status === 'paid' || mem.status === 'active';
+          const isActive = mem.status === 'active' || mem.status === 'trialing';
           console.log(`[Whop Membership] Membership ${mem.id}: status=${mem.status}, active=${isActive}, manage_url=${mem.manage_url ? 'yes' : 'no'}`);
           return isActive;
         });
@@ -1868,6 +1864,19 @@ export async function registerRoutes(
         res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
         res.set('Pragma', 'no-cache');
         res.set('Expires', '0');
+
+        // TEMPORARY: Always grant pro membership for testing
+        // TODO: Remove this block and uncomment the real membership check below when done testing
+        res.json({
+          hasMembership: true,
+          membershipId: 'temp-pro-access',
+          status: 'active',
+          manageUrl: null,
+          renewalPeriodEnd: null,
+          cancelAtPeriodEnd: false,
+        });
+        return;
+        // END TEMPORARY OVERRIDE
 
         if (proMembership) {
           console.log(`[Whop Membership] Active membership found: ${proMembership.id}, manage_url: ${proMembership.manage_url}`);
