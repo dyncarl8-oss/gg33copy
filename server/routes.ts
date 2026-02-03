@@ -1565,7 +1565,7 @@ export async function registerRoutes(
         return res.status(500).json({ error: "Whop SDK not initialized" });
       }
 
-      const planId = "plan_5KtWPeXOOPLWB";
+      const planId = "plan_AE7oozwqXYlcA";
       console.log(`[Whop Checkout] Creating checkout configuration for plan: ${planId}`);
       console.log(`[Whop Checkout] API Key present: ${!!process.env.WHOP_API_KEY}`);
       console.log(`[Whop Checkout] API Key length: ${process.env.WHOP_API_KEY?.length || 0}`);
