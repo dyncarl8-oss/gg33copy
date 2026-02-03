@@ -21,7 +21,9 @@ export async function registerRoutes(
       if (!user) {
         return res.status(404).json({ error: "User not found" });
       }
-      res.json({ user });
+      // TEMPORARY: Force isPro to true for testing - all features unlocked
+      // TODO: Remove this override and just return { user } when done testing
+      res.json({ user: { ...user, isPro: true }, isPro: true });
     } catch (error) {
       console.error("Error getting profile:", error);
       res.status(500).json({ error: "Failed to get profile" });
