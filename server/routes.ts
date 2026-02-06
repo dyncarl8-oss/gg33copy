@@ -1929,6 +1929,429 @@ export async function registerRoutes(
     }
   });
 
+  // ============================================================================
+  // PREMIUM FEATURES API - Enhanced capabilities for Pro users
+  // ============================================================================
+
+  // Number Deep Reports - Generate or fetch deep-dive analysis for core numbers
+  app.get("/api/number-report/:odisId/:numberType", async (req, res) => {
+    const { odisId, numberType } = req.params;
+
+    try {
+      const report = await storage.getNumberDeepReport(odisId, numberType);
+      if (!report) {
+        return res.status(404).json({ error: "Report not found" });
+      }
+      res.json({ report });
+    } catch (error) {
+      console.error("Error getting number deep report:", error);
+      res.status(500).json({ error: "Failed to get number report" });
+    }
+  });
+
+  app.post("/api/number-report", async (req, res) => {
+    const { odisId, numberType, numberValue, overview, uniqueExpression, dailyLife, superpower, shadowSide, famousExamples, thisYear, actionSteps, journalPrompts } = req.body;
+
+    if (!odisId || !numberType || !numberValue) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    try {
+      const report = await storage.saveNumberDeepReport({
+        odisId,
+        numberType,
+        numberValue,
+        overview,
+        uniqueExpression,
+        dailyLife,
+        superpower,
+        shadowSide,
+        famousExamples,
+        thisYear,
+        actionSteps,
+        journalPrompts,
+      });
+      res.json({ report });
+    } catch (error) {
+      console.error("Error saving number deep report:", error);
+      res.status(500).json({ error: "Failed to save number report" });
+    }
+  });
+
+  // Chat History - Persistent chat sessions with memory
+  app.get("/api/chat-history/:odisId", async (req, res) => {
+    const { odisId } = req.params;
+    const limit = parseInt(req.query.limit as string) || 50;
+
+    try {
+      const history = await storage.getChatHistory(odisId, limit);
+      res.json({ history });
+    } catch (error) {
+      console.error("Error getting chat history:", error);
+      res.status(500).json({ error: "Failed to get chat history" });
+    }
+  });
+
+  app.get("/api/chat-session/:sessionId", async (req, res) => {
+    const { sessionId } = req.params;
+
+    try {
+      const session = await storage.getChatSession(sessionId);
+      if (!session) {
+        return res.status(404).json({ error: "Session not found" });
+      }
+      res.json({ session });
+    } catch (error) {
+      console.error("Error getting chat session:", error);
+      res.status(500).json({ error: "Failed to get chat session" });
+    }
+  });
+
+  app.post("/api/chat-session", async (req, res) => {
+    const { odisId, sessionId, messages, mode, tags, title } = req.body;
+
+    if (!odisId || !sessionId || !messages) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    try {
+      const session = await storage.saveChatSession({
+        odisId,
+        sessionId,
+        messages,
+        mode: mode || 'general',
+        tags: tags || [],
+        title,
+      });
+      res.json({ session });
+    } catch (error) {
+      console.error("Error saving chat session:", error);
+      res.status(500).json({ error: "Failed to save chat session" });
+    }
+  });
+
+  app.put("/api/chat-session/:sessionId", async (req, res) => {
+    const { sessionId } = req.params;
+    const { messages } = req.body;
+
+    if (!messages) {
+      return res.status(400).json({ error: "Missing messages" });
+    }
+
+    try {
+      const session = await storage.updateChatSession(sessionId, messages);
+      if (!session) {
+        return res.status(404).json({ error: "Session not found" });
+      }
+      res.json({ session });
+    } catch (error) {
+      console.error("Error updating chat session:", error);
+      res.status(500).json({ error: "Failed to update chat session" });
+    }
+  });
+
+  // Daily Journal - Track mood, energy, and prediction accuracy
+  app.get("/api/journal/:odisId/:date", async (req, res) => {
+    const { odisId, date } = req.params;
+
+    try {
+      const journal = await storage.getDailyJournal(odisId, date);
+      res.json({ journal });
+    } catch (error) {
+      console.error("Error getting daily journal:", error);
+      res.status(500).json({ error: "Failed to get journal entry" });
+    }
+  });
+
+  app.get("/api/journal/:odisId", async (req, res) => {
+    const { odisId } = req.params;
+    const limit = parseInt(req.query.limit as string) || 30;
+
+    try {
+      const entries = await storage.getJournalEntries(odisId, limit);
+      res.json({ entries });
+    } catch (error) {
+      console.error("Error getting journal entries:", error);
+      res.status(500).json({ error: "Failed to get journal entries" });
+    }
+  });
+
+  app.post("/api/journal", async (req, res) => {
+    const { odisId, date, mood, energyLevel, activities, notes, personalDayNumber, predictionAccuracy } = req.body;
+
+    if (!odisId || !date) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    try {
+      const journal = await storage.saveDailyJournal({
+        odisId,
+        date,
+        mood,
+        energyLevel,
+        activities: activities || [],
+        notes,
+        personalDayNumber,
+        predictionAccuracy,
+      });
+      res.json({ journal });
+    } catch (error) {
+      console.error("Error saving daily journal:", error);
+      res.status(500).json({ error: "Failed to save journal entry" });
+    }
+  });
+
+  // Goals - Set and track goals with numerology timing
+  app.get("/api/goals/:odisId", async (req, res) => {
+    const { odisId } = req.params;
+    const status = req.query.status as string | undefined;
+
+    try {
+      const goals = await storage.getGoals(odisId, status);
+      res.json({ goals });
+    } catch (error) {
+      console.error("Error getting goals:", error);
+      res.status(500).json({ error: "Failed to get goals" });
+    }
+  });
+
+  app.get("/api/goal/:goalId", async (req, res) => {
+    const { goalId } = req.params;
+
+    try {
+      const goal = await storage.getGoal(goalId);
+      if (!goal) {
+        return res.status(404).json({ error: "Goal not found" });
+      }
+      res.json({ goal });
+    } catch (error) {
+      console.error("Error getting goal:", error);
+      res.status(500).json({ error: "Failed to get goal" });
+    }
+  });
+
+  app.post("/api/goals", async (req, res) => {
+    const { odisId, title, description, category, bestDates, bestMonths, status, progress } = req.body;
+
+    if (!odisId || !title || !category) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    try {
+      const goal = await storage.createGoal({
+        odisId,
+        title,
+        description,
+        category,
+        bestDates: bestDates || [],
+        bestMonths: bestMonths || [],
+        status: status || 'active',
+        progress: progress || 0,
+      });
+      res.json({ goal });
+    } catch (error) {
+      console.error("Error creating goal:", error);
+      res.status(500).json({ error: "Failed to create goal" });
+    }
+  });
+
+  app.put("/api/goal/:goalId", async (req, res) => {
+    const { goalId } = req.params;
+    const updates = req.body;
+
+    try {
+      const goal = await storage.updateGoal(goalId, updates);
+      if (!goal) {
+        return res.status(404).json({ error: "Goal not found" });
+      }
+      res.json({ goal });
+    } catch (error) {
+      console.error("Error updating goal:", error);
+      res.status(500).json({ error: "Failed to update goal" });
+    }
+  });
+
+  app.delete("/api/goal/:goalId", async (req, res) => {
+    const { goalId } = req.params;
+
+    try {
+      const deleted = await storage.deleteGoal(goalId);
+      if (!deleted) {
+        return res.status(404).json({ error: "Goal not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting goal:", error);
+      res.status(500).json({ error: "Failed to delete goal" });
+    }
+  });
+
+  // Saved Insights - Personal insights library 
+  app.get("/api/insights/:odisId", async (req, res) => {
+    const { odisId } = req.params;
+    const limit = parseInt(req.query.limit as string) || 100;
+
+    try {
+      const insights = await storage.getSavedInsights(odisId, limit);
+      res.json({ insights });
+    } catch (error) {
+      console.error("Error getting saved insights:", error);
+      res.status(500).json({ error: "Failed to get insights" });
+    }
+  });
+
+  app.post("/api/insights", async (req, res) => {
+    const { odisId, source, content, title, category, tags } = req.body;
+
+    if (!odisId || !source || !content) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    try {
+      const insight = await storage.saveInsight({
+        odisId,
+        source,
+        content,
+        title,
+        category,
+        tags: tags || [],
+      });
+      res.json({ insight });
+    } catch (error) {
+      console.error("Error saving insight:", error);
+      res.status(500).json({ error: "Failed to save insight" });
+    }
+  });
+
+  app.delete("/api/insight/:insightId", async (req, res) => {
+    const { insightId } = req.params;
+
+    try {
+      const deleted = await storage.deleteInsight(insightId);
+      if (!deleted) {
+        return res.status(404).json({ error: "Insight not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting insight:", error);
+      res.status(500).json({ error: "Failed to delete insight" });
+    }
+  });
+
+  // Relationship Library - Store and analyze relationships
+  app.get("/api/relationships/:odisId", async (req, res) => {
+    const { odisId } = req.params;
+
+    try {
+      const relationships = await storage.getRelationships(odisId);
+      res.json({ relationships });
+    } catch (error) {
+      console.error("Error getting relationships:", error);
+      res.status(500).json({ error: "Failed to get relationships" });
+    }
+  });
+
+  app.get("/api/relationship/:relationshipId", async (req, res) => {
+    const { relationshipId } = req.params;
+
+    try {
+      const relationship = await storage.getRelationship(relationshipId);
+      if (!relationship) {
+        return res.status(404).json({ error: "Relationship not found" });
+      }
+      res.json({ relationship });
+    } catch (error) {
+      console.error("Error getting relationship:", error);
+      res.status(500).json({ error: "Failed to get relationship" });
+    }
+  });
+
+  app.post("/api/relationships", async (req, res) => {
+    const { odisId, name, relationshipType, birthDate, birthTime, birthLocation, compatibilityScore, notes } = req.body;
+
+    if (!odisId || !name || !relationshipType || !birthDate) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    try {
+      const relationship = await storage.createRelationship({
+        odisId,
+        name,
+        relationshipType,
+        birthDate: new Date(birthDate),
+        birthTime,
+        birthLocation,
+        compatibilityScore,
+        notes,
+      });
+      res.json({ relationship });
+    } catch (error) {
+      console.error("Error creating relationship:", error);
+      res.status(500).json({ error: "Failed to create relationship" });
+    }
+  });
+
+  app.put("/api/relationship/:relationshipId", async (req, res) => {
+    const { relationshipId } = req.params;
+    const updates = req.body;
+
+    // Convert birthDate string to Date if present
+    if (updates.birthDate && typeof updates.birthDate === 'string') {
+      updates.birthDate = new Date(updates.birthDate);
+    }
+
+    try {
+      const relationship = await storage.updateRelationship(relationshipId, updates);
+      if (!relationship) {
+        return res.status(404).json({ error: "Relationship not found" });
+      }
+      res.json({ relationship });
+    } catch (error) {
+      console.error("Error updating relationship:", error);
+      res.status(500).json({ error: "Failed to update relationship" });
+    }
+  });
+
+  app.delete("/api/relationship/:relationshipId", async (req, res) => {
+    const { relationshipId } = req.params;
+
+    try {
+      const deleted = await storage.deleteRelationship(relationshipId);
+      if (!deleted) {
+        return res.status(404).json({ error: "Relationship not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting relationship:", error);
+      res.status(500).json({ error: "Failed to delete relationship" });
+    }
+  });
+
+  // User Streaks - Track engagement and achievements
+  app.get("/api/streak/:odisId", async (req, res) => {
+    const { odisId } = req.params;
+
+    try {
+      const streak = await storage.getUserStreak(odisId);
+      res.json({ streak });
+    } catch (error) {
+      console.error("Error getting user streak:", error);
+      res.status(500).json({ error: "Failed to get streak" });
+    }
+  });
+
+  app.post("/api/streak/:odisId/check-in", async (req, res) => {
+    const { odisId } = req.params;
+
+    try {
+      const streak = await storage.updateStreak(odisId);
+      res.json({ streak });
+    } catch (error) {
+      console.error("Error updating streak:", error);
+      res.status(500).json({ error: "Failed to update streak" });
+    }
+  });
+
   app.get("/api/health", (_req, res) => {
     res.json({ status: "ok" });
   });

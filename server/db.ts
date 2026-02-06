@@ -45,7 +45,7 @@ const userSchema = new mongoose.Schema({
   updatedAt: { type: Date, default: Date.now },
 });
 
-userSchema.pre("save", function() {
+userSchema.pre("save", function () {
   this.updatedAt = new Date();
 });
 
@@ -95,6 +95,130 @@ const personalityInsightSchema = new mongoose.Schema({
 });
 
 export const PersonalityInsightModel = mongoose.model("PersonalityInsight", personalityInsightSchema);
+
+// Number Deep Report Schema - stores AI-generated deep-dive reports for each core number
+const numberDeepReportSchema = new mongoose.Schema({
+  odisId: { type: String, required: true, index: true },
+  numberType: { type: String, required: true, enum: ['lifePath', 'expression', 'soulUrge', 'personality', 'maturity'] },
+  numberValue: { type: Number, required: true },
+  overview: { type: String, required: true },
+  uniqueExpression: { type: String, required: true },
+  dailyLife: { type: String, required: true },
+  superpower: { type: String, required: true },
+  shadowSide: { type: String, required: true },
+  famousExamples: [{ name: String, why: String }],
+  thisYear: { type: String, required: true },
+  actionSteps: [{ type: String }],
+  journalPrompts: [{ type: String }],
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
+});
+
+numberDeepReportSchema.index({ odisId: 1, numberType: 1 }, { unique: true });
+
+export const NumberDeepReportModel = mongoose.model("NumberDeepReport", numberDeepReportSchema);
+
+// Chat History Schema - stores persistent chat conversations
+const chatHistorySchema = new mongoose.Schema({
+  odisId: { type: String, required: true, index: true },
+  sessionId: { type: String, required: true, index: true },
+  messages: [{
+    role: { type: String, enum: ['user', 'assistant'], required: true },
+    content: { type: String, required: true },
+    timestamp: { type: Date, default: Date.now },
+  }],
+  mode: { type: String, enum: ['daily', 'decision', 'relationship', 'dream', 'conflict', 'general'], default: 'general' },
+  tags: [{ type: String }],
+  title: { type: String },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
+});
+
+chatHistorySchema.index({ odisId: 1, createdAt: -1 });
+
+export const ChatHistoryModel = mongoose.model("ChatHistory", chatHistorySchema);
+
+// Daily Journal Schema - tracks user's daily mood, energy, and activities
+const dailyJournalSchema = new mongoose.Schema({
+  odisId: { type: String, required: true, index: true },
+  date: { type: String, required: true },
+  mood: { type: Number, min: 1, max: 5 },
+  energyLevel: { type: Number, min: 1, max: 5 },
+  activities: [{ type: String }],
+  notes: { type: String },
+  personalDayNumber: { type: Number },
+  predictionAccuracy: { type: Number, min: 0, max: 100 },
+  createdAt: { type: Date, default: Date.now },
+});
+
+dailyJournalSchema.index({ odisId: 1, date: 1 }, { unique: true });
+
+export const DailyJournalModel = mongoose.model("DailyJournal", dailyJournalSchema);
+
+// Goal Schema - user goals with numerology timing
+const goalSchema = new mongoose.Schema({
+  odisId: { type: String, required: true, index: true },
+  title: { type: String, required: true },
+  description: { type: String },
+  category: { type: String, enum: ['career', 'relationship', 'health', 'spiritual', 'financial', 'personal'], required: true },
+  bestDates: [{ type: String }],
+  bestMonths: [{ type: Number }],
+  status: { type: String, enum: ['active', 'completed', 'paused'], default: 'active' },
+  progress: { type: Number, default: 0, min: 0, max: 100 },
+  completedAt: { type: Date },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
+});
+
+goalSchema.index({ odisId: 1, status: 1 });
+
+export const GoalModel = mongoose.model("Goal", goalSchema);
+
+// Saved Insight Schema - user's saved insights library
+const savedInsightSchema = new mongoose.Schema({
+  odisId: { type: String, required: true, index: true },
+  source: { type: String, required: true, enum: ['chat', 'daily', 'personality', 'compatibility', 'explore', 'number', 'other'] },
+  content: { type: String, required: true },
+  title: { type: String },
+  category: { type: String },
+  tags: [{ type: String }],
+  createdAt: { type: Date, default: Date.now },
+});
+
+savedInsightSchema.index({ odisId: 1, createdAt: -1 });
+
+export const SavedInsightModel = mongoose.model("SavedInsight", savedInsightSchema);
+
+// Relationship Library Schema - stored relationships for compatibility tracking
+const relationshipSchema = new mongoose.Schema({
+  odisId: { type: String, required: true, index: true },
+  name: { type: String, required: true },
+  relationshipType: { type: String, enum: ['partner', 'parent', 'sibling', 'friend', 'coworker', 'boss', 'other'], required: true },
+  birthDate: { type: Date, required: true },
+  birthTime: { type: String },
+  birthLocation: { type: String },
+  compatibilityScore: { type: Number },
+  notes: { type: String },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
+});
+
+relationshipSchema.index({ odisId: 1 });
+
+export const RelationshipModel = mongoose.model("Relationship", relationshipSchema);
+
+// User Streak Schema - tracks engagement streaks
+const userStreakSchema = new mongoose.Schema({
+  odisId: { type: String, required: true, unique: true, index: true },
+  currentStreak: { type: Number, default: 0 },
+  longestStreak: { type: Number, default: 0 },
+  lastCheckIn: { type: Date },
+  totalCheckIns: { type: Number, default: 0 },
+  achievements: [{ type: String }],
+  updatedAt: { type: Date, default: Date.now },
+});
+
+export const UserStreakModel = mongoose.model("UserStreak", userStreakSchema);
 
 // TypeScript interfaces
 export interface DBUser {
@@ -149,5 +273,103 @@ export interface DBPersonalityInsight {
     chineseZodiac?: string | null;
   };
   createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface DBNumberDeepReport {
+  id: string;
+  odisId: string;
+  numberType: 'lifePath' | 'expression' | 'soulUrge' | 'personality' | 'maturity';
+  numberValue: number;
+  overview: string;
+  uniqueExpression: string;
+  dailyLife: string;
+  superpower: string;
+  shadowSide: string;
+  famousExamples: Array<{ name: string; why: string }>;
+  thisYear: string;
+  actionSteps: string[];
+  journalPrompts: string[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface DBChatHistory {
+  id: string;
+  odisId: string;
+  sessionId: string;
+  messages: Array<{
+    role: 'user' | 'assistant';
+    content: string;
+    timestamp: Date;
+  }>;
+  mode: 'daily' | 'decision' | 'relationship' | 'dream' | 'conflict' | 'general';
+  tags: string[];
+  title?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface DBDailyJournal {
+  id: string;
+  odisId: string;
+  date: string;
+  mood?: number;
+  energyLevel?: number;
+  activities: string[];
+  notes?: string;
+  personalDayNumber?: number;
+  predictionAccuracy?: number;
+  createdAt: Date;
+}
+
+export interface DBGoal {
+  id: string;
+  odisId: string;
+  title: string;
+  description?: string;
+  category: 'career' | 'relationship' | 'health' | 'spiritual' | 'financial' | 'personal';
+  bestDates: string[];
+  bestMonths: number[];
+  status: 'active' | 'completed' | 'paused';
+  progress: number;
+  completedAt?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface DBSavedInsight {
+  id: string;
+  odisId: string;
+  source: 'chat' | 'daily' | 'personality' | 'compatibility' | 'explore' | 'number' | 'other';
+  content: string;
+  title?: string;
+  category?: string;
+  tags: string[];
+  createdAt: Date;
+}
+
+export interface DBRelationship {
+  id: string;
+  odisId: string;
+  name: string;
+  relationshipType: 'partner' | 'parent' | 'sibling' | 'friend' | 'coworker' | 'boss' | 'other';
+  birthDate: Date;
+  birthTime?: string;
+  birthLocation?: string;
+  compatibilityScore?: number;
+  notes?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface DBUserStreak {
+  id: string;
+  odisId: string;
+  currentStreak: number;
+  longestStreak: number;
+  lastCheckIn?: Date;
+  totalCheckIns: number;
+  achievements: string[];
   updatedAt: Date;
 }
