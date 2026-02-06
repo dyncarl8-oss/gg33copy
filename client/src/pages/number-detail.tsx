@@ -276,7 +276,12 @@ export default function NumberDetailPage() {
   // Map route params to internal types
   const mappedType = type === 'lifepath' ? 'life-path' :
     type === 'soulurge' ? 'soul-urge' :
-      type as any;
+      type === 'dayofbirth' ? 'day-of-birth' :
+        type === 'generation' ? 'generation' :
+          type === 'attitude' ? 'attitude' :
+            type === 'maturity' ? 'maturity' :
+              type === 'personality' ? 'personality' :
+                type === 'expression' ? 'expression' : 'life-path';
 
   return (
     <div className="min-h-screen bg-background">
@@ -314,6 +319,7 @@ export default function NumberDetailPage() {
               numberType={mappedType}
               numberValue={number}
               userName={profileData?.fullName?.split(' ')[0] || "Seeker"}
+              comparisonNumber={profileData?.lifePathNum || 1}
             />
           </div>
         </ProGatekeeper>
