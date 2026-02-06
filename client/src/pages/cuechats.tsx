@@ -19,6 +19,12 @@ interface ChatMessage {
 interface ChatSession {
   systemContext: string;
   firstName: string;
+  cue?: {
+    id: number;
+    name: string;
+    type: string;
+    description?: string;
+  };
 }
 
 const exampleMessages: ChatMessage[] = [
@@ -32,7 +38,7 @@ function MarkdownContent({ content, className }: { content: string; className?: 
   const parseMarkdown = (text: string) => {
     const lines = text.split('\n');
     const elements: JSX.Element[] = [];
-    
+
     lines.forEach((line, lineIndex) => {
       if (line.trim().startsWith('*') && !line.trim().startsWith('**')) {
         const bulletMatch = line.match(/^\s*\*\s+(.+)$/);
@@ -47,7 +53,7 @@ function MarkdownContent({ content, className }: { content: string; className?: 
           return;
         }
       }
-      
+
       const inlineContent = parseInlineMarkdown(line, `line-${lineIndex}`);
       elements.push(
         <span key={lineIndex}>
@@ -56,7 +62,7 @@ function MarkdownContent({ content, className }: { content: string; className?: 
         </span>
       );
     });
-    
+
     return elements;
   };
 
@@ -64,51 +70,51 @@ function MarkdownContent({ content, className }: { content: string; className?: 
     const parts: JSX.Element[] = [];
     let remaining = text;
     let partIndex = 0;
-    
+
     while (remaining.length > 0) {
       const boldMatch = remaining.match(/\*\*(.+?)\*\*/);
       const italicMatch = remaining.match(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/);
-      
+
       let firstMatch: { index: number; length: number; content: string; type: 'bold' | 'italic' } | null = null;
-      
+
       if (boldMatch && boldMatch.index !== undefined) {
-        firstMatch = { 
-          index: boldMatch.index, 
-          length: boldMatch[0].length, 
-          content: boldMatch[1], 
-          type: 'bold' 
+        firstMatch = {
+          index: boldMatch.index,
+          length: boldMatch[0].length,
+          content: boldMatch[1],
+          type: 'bold'
         };
       }
-      
+
       if (italicMatch && italicMatch.index !== undefined) {
         if (!firstMatch || italicMatch.index < firstMatch.index) {
-          firstMatch = { 
-            index: italicMatch.index, 
-            length: italicMatch[0].length, 
-            content: italicMatch[1], 
-            type: 'italic' 
+          firstMatch = {
+            index: italicMatch.index,
+            length: italicMatch[0].length,
+            content: italicMatch[1],
+            type: 'italic'
           };
         }
       }
-      
+
       if (firstMatch) {
         if (firstMatch.index > 0) {
           parts.push(<span key={`${keyPrefix}-${partIndex++}`}>{remaining.slice(0, firstMatch.index)}</span>);
         }
-        
+
         if (firstMatch.type === 'bold') {
           parts.push(<strong key={`${keyPrefix}-${partIndex++}`} className="font-semibold">{firstMatch.content}</strong>);
         } else {
           parts.push(<em key={`${keyPrefix}-${partIndex++}`} className="italic text-amber-11">{firstMatch.content}</em>);
         }
-        
+
         remaining = remaining.slice(firstMatch.index + firstMatch.length);
       } else {
         parts.push(<span key={`${keyPrefix}-${partIndex++}`}>{remaining}</span>);
         break;
       }
     }
-    
+
     return parts;
   };
 
@@ -149,13 +155,12 @@ function ChatBubble({ msg, index, isExample = false }: { msg: ChatMessage; index
         </div>
       )}
       <div
-        className={`max-w-[80%] p-4 rounded-lg ${
-          msg.role === 'user'
+        className={`max-w-[80%] p-4 rounded-lg ${msg.role === 'user'
             ? 'bg-amber-9 text-gray-1 rounded-tr-sm'
             : msg.error
               ? 'bg-red-500/10 border border-red-500/20 rounded-tl-sm'
               : 'bg-gray-a3 rounded-tl-sm'
-        }`}
+          }`}
       >
         <MarkdownContent content={msg.content} className={`text-2 ${msg.error ? 'text-red-400' : ''}`} />
       </div>
@@ -197,14 +202,14 @@ export default function CueChats() {
 
   const startChat = async () => {
     if (isInitializing) return;
-    
+
     if (!isPro) {
       setShowUpgradeModal(true);
       return;
     }
-    
+
     const odisId = localStorage.getItem('gg33-odis-id');
-    
+
     if (!odisId) {
       setError('Please create your profile first to use CueChats');
       return;
@@ -214,20 +219,36 @@ export default function CueChats() {
     setError(null);
 
     try {
-      const response = await fetch('/api/chat/init', {
+      const searchParams = new URLSearchParams(window.location.search);
+      const cueId = searchParams.get('cueId');
+
+      const endpoint = cueId ? '/api/chat/init/cue' : '/api/chat/init';
+      const body = cueId ? { odisId, cueId: parseInt(cueId) } : { odisId };
+
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ odisId }),
+        body: JSON.stringify(body),
         credentials: 'include',
       });
 
       const data = await response.json();
-      
+
       if (data.success && data.systemContext) {
         setChatSession({
           systemContext: data.systemContext,
           firstName: data.firstName,
+          cue: data.cue,
         });
+
+        if (data.cue && messages.length === 0) {
+          const introMessage: ChatMessage = {
+            role: 'assistant',
+            content: `Hello! I've connected to the energetic frequency of **${data.cue.name}**. How can I help you explore your alignment with this ${data.cue.type.toLowerCase()}?`
+          };
+          setMessages([introMessage]);
+        }
+
         setShowPreview(false);
         setTimeout(() => inputRef.current?.focus(), 100);
       } else {
@@ -247,7 +268,7 @@ export default function CueChats() {
     const userMessage = inputValue.trim();
     setInputValue('');
     setError(null);
-    
+
     const newUserMessage: ChatMessage = { role: 'user', content: userMessage };
     setMessages(prev => [...prev, newUserMessage]);
     setIsLoading(true);
@@ -273,7 +294,7 @@ export default function CueChats() {
       });
 
       const data = await response.json();
-      
+
       if (data.response) {
         const assistantMessage: ChatMessage = { role: 'assistant', content: data.response };
         setMessages(prev => [...prev, assistantMessage]);
@@ -283,10 +304,10 @@ export default function CueChats() {
     } catch (err) {
       console.error('Chat error:', err);
       setError('Failed to get response. Please try again.');
-      const errorMessage: ChatMessage = { 
-        role: 'assistant', 
+      const errorMessage: ChatMessage = {
+        role: 'assistant',
         content: 'I apologize, but I encountered an issue generating a response. Please try again.',
-        error: true 
+        error: true
       };
       setMessages(prev => [...prev, errorMessage]);
     } finally {
@@ -316,7 +337,7 @@ export default function CueChats() {
     <>
       <StarField />
       <Navigation />
-      
+
       <main className="pt-20 pb-12 px-4 min-h-screen" data-testid="page-cuechats">
         <div className="container mx-auto max-w-4xl space-y-8">
           <div className="text-center">
@@ -340,9 +361,13 @@ export default function CueChats() {
                     <Bot className="w-5 h-5 text-gray-1" />
                   </div>
                   <div>
-                    <CardTitle className="text-4">CueChat AI</CardTitle>
-                    <CardDescription className="text-2 text-gray-11">
-                      {chatSession ? `Chatting with ${chatSession.firstName}` : 'Powered by your energy profile'}
+                    <CardTitle className="text-4">
+                      {chatSession?.cue ? chatSession.cue.name : 'CueChat AI'}
+                    </CardTitle>
+                    <CardDescription className="text-2 text-gray-11 text-ellipsis overflow-hidden whitespace-nowrap max-w-[200px]">
+                      {chatSession?.cue
+                        ? `${chatSession.cue.type} • ${chatSession.cue.description || 'Energetic Profile'}`
+                        : chatSession ? `Chatting with ${chatSession.firstName}` : 'Powered by your energy profile'}
                     </CardDescription>
                   </div>
                 </div>
@@ -382,7 +407,7 @@ export default function CueChats() {
                     {exampleMessages.map((msg, i) => (
                       <ChatBubble key={i} msg={msg} index={i} isExample />
                     ))}
-                    
+
                     <div className="flex justify-center pt-4">
                       <Button
                         variant="gold"
@@ -413,22 +438,24 @@ export default function CueChats() {
                   </>
                 ) : (
                   <>
-                    {!hasMessages && (
-                      <div className="h-full flex flex-col items-center justify-center text-gray-11">
-                        <Bot className="w-12 h-12 text-amber-9 mb-4" />
-                        <p className="text-3">Ask me anything</p>
-                      </div>
-                    )}
-                    
+                    <div className="h-full flex flex-col items-center justify-center text-gray-11 py-12">
+                      <Bot className="w-12 h-12 text-amber-9 mb-4" />
+                      <p className="text-3">
+                        {chatSession?.cue
+                          ? `Ask me about your alignment with ${chatSession.cue.name}`
+                          : 'Ask me anything about your energy'}
+                      </p>
+                    </div>
+
                     {messages.map((msg, i) => (
                       <div key={i}>
                         <ChatBubble msg={msg} index={i} />
                         {msg.error && (
                           <div className="flex gap-3 justify-start mt-1">
                             <div className="w-8" />
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
+                            <Button
+                              variant="ghost"
+                              size="sm"
                               className="text-red-400"
                               onClick={() => {
                                 setMessages(prev => prev.filter((_, idx) => idx !== i));
@@ -445,7 +472,7 @@ export default function CueChats() {
                     ))}
 
                     {isLoading && <CosmicLoadingAnimation />}
-                    
+
                     <div ref={messagesEndRef} />
                   </>
                 )}
@@ -471,9 +498,9 @@ export default function CueChats() {
                       disabled={isLoading}
                       data-testid="input-chat-message"
                     />
-                    <Button 
-                      variant="gold" 
-                      size="icon" 
+                    <Button
+                      variant="gold"
+                      size="icon"
                       onClick={sendMessage}
                       disabled={isLoading || !inputValue.trim()}
                       data-testid="button-send-message"

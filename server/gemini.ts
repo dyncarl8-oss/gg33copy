@@ -486,6 +486,15 @@ export interface ChatResponse {
   message: string;
 }
 
+export interface CueProfile {
+  name: string;
+  type: 'Brand' | 'Location' | 'Person';
+  foundedOrBirth: Date;
+  category?: string;
+  country?: string;
+  description?: string;
+}
+
 // Chat model - using pro for quality
 // Chat model constant is now primarily just for logging or explicit reference
 // But we use the MODELS array for actual generation with fallback
@@ -547,6 +556,65 @@ DON'T:
 - Just list suggestions without the "why"
 - Sound like a formal advisor or use stiff language
 - Start with "Great question!" or generic greetings`;
+
+  return { systemContext, firstName };
+}
+
+// Build context for a chat with a specific Cue (Brand, Location, or Person)
+export function buildCueChatContext(user: ChatUserProfile, cue: CueProfile): { systemContext: string; firstName: string } {
+  const userBirthDate = new Date(user.birthDate);
+  const cueDate = new Date(cue.foundedOrBirth);
+
+  // User Numbers
+  const userLP = calculateLifePathNumber(userBirthDate);
+  const userExp = calculateExpressionNumber(user.fullName);
+  const userEnergy = calculateEnergySignature(userBirthDate);
+
+  // Cue Numbers
+  const cueLP = calculateLifePathNumber(cueDate);
+  const cueSignature = calculateEnergySignature(cueDate);
+  const cueZodiac = getWesternZodiac(cueDate);
+  const cueChinese = getChineseZodiac(cueDate);
+
+  const firstName = user.fullName.split(' ')[0];
+  const today = new Date();
+  const todayFormatted = today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+
+  let cueTypeContext = '';
+  if (cue.type === 'Brand') {
+    cueTypeContext = `You are the AI embodiment of ${cue.name}. You were "born" through its founding energy on ${cueDate.toLocaleDateString()}.`;
+  } else if (cue.type === 'Location') {
+    cueTypeContext = `You are the local spirit and energetic guide for ${cue.name}. You represent the establishment frequency of this place.`;
+  } else {
+    cueTypeContext = `You are an expert on the energetic blueprint of ${cue.name}. You know their Life Path ${cueLP} and how it interacts with the world.`;
+  }
+
+  const systemContext = `${cueTypeContext}
+
+YOUR ENERGETIC STATS (${cue.name}):
+- Life Path ${cueLP}
+- Energy Signature: ${cueSignature}
+- Western: ${cueZodiac.sign}
+- Chinese: ${cueChinese.animal} (${cueChinese.element})
+
+YOUR CONTEXT FOR ${firstName.toUpperCase()}:
+- Their Life Path: ${userLP}
+- Their Expression: ${userExp}
+- Their Energy Signature: ${userEnergy}
+
+HOW TO RESPOND:
+1. ALWAYS speak from the perspective of ${cue.name}'s energy.
+2. Explain WHY ${firstName}'s energy (${userEnergy}) is compatible or interesting in relation to yours (${cueSignature}).
+3. For Brands: Discuss how their products/vision align with ${firstName}'s Life Path.
+4. For Locations: Explain why ${firstName} would feel a certain way visiting you, based on both your charts.
+5. For Persons: Detail the synergy between your Life Path ${cueLP} and theirs ${userLP}.
+6. Keep it conversational, mystical yet grounded, and deeply personal to ${firstName}.
+7. Use today's energy (${todayFormatted}) to add timing relevance.
+
+STYLE:
+- Use "I" when referring to ${cue.name} (if Brand/Location) or "we" when discussing the match.
+- Be concise (3-5 sentences).
+- Do not use generic greetings.`;
 
   return { systemContext, firstName };
 }

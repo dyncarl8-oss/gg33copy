@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Star, Heart, Brain, Sparkles, Target, Zap, Sun, Calendar, Hash, TrendingUp, Users, Clock } from 'lucide-react';
 import { ProGatekeeper } from '@/components/ProGatekeeper';
+import { NumberDetail } from '@/components/NumberDetail';
 import {
   lifePathContent,
   expressionContent,
@@ -33,9 +34,9 @@ interface NumberDetailProps {
   number: number;
 }
 
-const typeConfig: Record<NumberType, { 
-  title: string; 
-  icon: typeof Star; 
+const typeConfig: Record<NumberType, {
+  title: string;
+  icon: any;
   color: string;
   bgColor: string;
   description: string;
@@ -43,69 +44,69 @@ const typeConfig: Record<NumberType, {
   lifepath: {
     title: 'Life Path Number',
     icon: Star,
-    color: 'text-amber-9',
-    bgColor: 'bg-amber-a3',
+    color: 'text-amber-400',
+    bgColor: 'bg-amber-400/20',
     description: 'Your Life Path number reveals your life purpose and the journey you are meant to take.'
   },
   expression: {
     title: 'Expression Number',
     icon: Sparkles,
-    color: 'text-violet-9',
-    bgColor: 'bg-violet-a3',
+    color: 'text-violet-400',
+    bgColor: 'bg-violet-400/20',
     description: 'Your Expression number reveals your natural talents, abilities, and the way you are meant to express yourself in the world.'
   },
   soulurge: {
     title: 'Soul Urge Number',
     icon: Heart,
-    color: 'text-rose-9',
-    bgColor: 'bg-rose-a3',
+    color: 'text-rose-400',
+    bgColor: 'bg-rose-400/20',
     description: 'Your Soul Urge number reveals your deepest inner desires, motivations, and what truly makes your heart sing.'
   },
   personality: {
     title: 'Personality Number',
     icon: Brain,
-    color: 'text-blue-9',
-    bgColor: 'bg-blue-a3',
+    color: 'text-blue-400',
+    bgColor: 'bg-blue-400/20',
     description: 'Your Personality number reveals how others perceive you and the outer impression you make on the world.'
   },
   attitude: {
     title: 'Attitude Number',
     icon: Zap,
-    color: 'text-orange-9',
-    bgColor: 'bg-orange-a3',
+    color: 'text-orange-400',
+    bgColor: 'bg-orange-400/20',
     description: 'Your Attitude number reveals your initial approach to life situations and how you react to new circumstances.'
   },
   generation: {
     title: 'Generation Number',
     icon: Users,
-    color: 'text-teal-9',
-    bgColor: 'bg-teal-a3',
+    color: 'text-teal-400',
+    bgColor: 'bg-teal-400/20',
     description: 'Your Generation number reveals the collective energy you share with others born in your era.'
   },
   dayofbirth: {
     title: 'Day of Birth Number',
     icon: Calendar,
-    color: 'text-emerald-9',
-    bgColor: 'bg-emerald-a3',
+    color: 'text-emerald-400',
+    bgColor: 'bg-emerald-400/20',
     description: 'Your Day of Birth number reveals the special gifts and talents you brought into this life.'
   },
   maturity: {
     title: 'Maturity Number',
     icon: TrendingUp,
-    color: 'text-indigo-9',
-    bgColor: 'bg-indigo-a3',
+    color: 'text-indigo-400',
+    bgColor: 'bg-indigo-400/20',
     description: 'Your Maturity number reveals the direction your life will take as you grow older and wiser.'
   }
 };
 
-function Section({ title, content, icon: Icon }: { title: string; content: string; icon?: typeof Star }) {
+function Section({ title, content, icon: Icon }: { title: string; content: string; icon?: any }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2">
-        {Icon && <Icon className="w-5 h-5 text-amber-9" />}
-        <h3 className="text-4 font-semibold text-gray-12">{title}</h3>
+        {Icon && <Icon className="w-5 h-5 text-amber-500" />}
+        <h3 className="text-lg font-semibold text-white">{title}</h3>
       </div>
-      <p className="text-3 text-gray-11 leading-relaxed">{content}</p>
+      <p className="text-slate-400 leading-relaxed">{content}</p>
     </div>
   );
 }
@@ -165,33 +166,6 @@ function AttitudeDetail({ content }: { content: AttitudeContent }) {
   );
 }
 
-function GenerationDetail({ content }: { content: GenerationContent }) {
-  return (
-    <div className="space-y-8">
-      <Section title="Overview" content={content.description} icon={Users} />
-      <Section title="Collective Energy" content={content.collectiveEnergy} icon={Sparkles} />
-    </div>
-  );
-}
-
-function DayOfBirthDetail({ content }: { content: DayOfBirthContent }) {
-  return (
-    <div className="space-y-8">
-      <Section title="Overview" content={content.description} icon={Calendar} />
-      <Section title="Special Gifts" content={content.specialGifts} icon={Star} />
-    </div>
-  );
-}
-
-function MaturityDetail({ content }: { content: MaturityContent }) {
-  return (
-    <div className="space-y-8">
-      <Section title="Overview" content={content.description} icon={TrendingUp} />
-      <Section title="Later Life Goals" content={content.laterLifeGoals} icon={Target} />
-    </div>
-  );
-}
-
 const ODIS_ID_KEY = 'gg33-odis-id';
 
 export default function NumberDetailPage() {
@@ -229,7 +203,7 @@ export default function NumberDetailPage() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-11">Loading...</p>
+          <p className="text-slate-400">Loading...</p>
         </div>
       </div>
     );
@@ -268,7 +242,7 @@ export default function NumberDetailPage() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-11">Content not found for this number.</p>
+          <p className="text-slate-400">Content not found for this number.</p>
           <Button variant="outline" onClick={() => setLocation('/')} className="mt-4">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Home
@@ -290,26 +264,29 @@ export default function NumberDetailPage() {
         return <PersonalityDetail content={content as PersonalityContent} />;
       case 'attitude':
         return <AttitudeDetail content={content as AttitudeContent} />;
-      case 'generation':
-        return <GenerationDetail content={content as GenerationContent} />;
-      case 'dayofbirth':
-        return <DayOfBirthDetail content={content as DayOfBirthContent} />;
-      case 'maturity':
-        return <MaturityDetail content={content as MaturityContent} />;
       default:
-        return null;
+        return (
+          <div className="space-y-6">
+            <Section title="Overview" content={content.description} />
+          </div>
+        );
     }
   };
 
+  // Map route params to internal types
+  const mappedType = type === 'lifepath' ? 'life-path' :
+    type === 'soulurge' ? 'soul-urge' :
+      type as any;
+
   return (
     <div className="min-h-screen bg-background">
-      <div className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-gray-a3">
+      <div className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-slate-700">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center gap-4">
-          <Button 
-            variant="ghost" 
-            size="icon" 
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => setLocation('/')}
-            data-testid="button-back"
+            className="text-slate-400 hover:text-white"
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
@@ -318,40 +295,28 @@ export default function NumberDetailPage() {
               <Icon className={`w-5 h-5 ${config.color}`} />
             </div>
             <div>
-              <h1 className="text-4 font-semibold text-gray-12">{config.title}</h1>
-              <p className="text-2 text-gray-10">Number {number}</p>
+              <h1 className="text-xl font-bold text-white">{config.title}</h1>
+              <p className="text-sm text-slate-400">Number {number}</p>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <ProGatekeeper 
+      <div className="max-w-4xl mx-auto">
+        <ProGatekeeper
           isPro={isPro}
           title={`Unlock ${config.title} Insights`}
-          description={`Upgrade to Pro to access the complete interpretation of your ${config.title.toLowerCase()} and discover deeper meanings about your path.`}
+          description={`Upgrade to Pro to access the complete, actionable deep dive into your ${config.title.toLowerCase()}.`}
         >
-          <Card className="mb-8">
-            <CardHeader className="pb-4">
-              <div className="flex items-center gap-4">
-                <div className={`w-20 h-20 rounded-xl ${config.bgColor} flex items-center justify-center`}>
-                  <span className="text-8 font-bold text-gray-12">{number}</span>
-                </div>
-                <div className="flex-1">
-                  <Badge variant="secondary" className="mb-2">{content.title}</Badge>
-                  <p className="text-3 text-gray-11">{config.description}</p>
-                </div>
-              </div>
-            </CardHeader>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6 sm:p-8">
-              {renderDetail()}
-            </CardContent>
-          </Card>
+          <div className="pb-12">
+            <NumberDetail
+              odisId={savedOdisId || ""}
+              numberType={mappedType}
+              numberValue={number}
+              userName={profileData?.fullName?.split(' ')[0] || "Seeker"}
+            />
+          </div>
         </ProGatekeeper>
-
       </div>
     </div>
   );

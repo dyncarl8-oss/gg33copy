@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage, generateOdisId } from "./storage";
 import { whopAuthMiddleware, requireWhopAuth, checkAccess, getWhopUserProfile, type WhopRequest } from "./whop";
-import { generatePersonalityInsights, generateDailyEnergy, generateCompatibilityInsights, generateChatResponse, generateChatResponseWithContext, generateChatResponseStream, buildUserContext, type UserNumerologyProfile, type CompatibilityProfile, type ChatMessage } from "./gemini";
+import { generatePersonalityInsights, generateDailyEnergy, generateCompatibilityInsights, generateChatResponse, generateChatResponseWithContext, generateChatResponseStream, buildUserContext, buildCueChatContext, type UserNumerologyProfile, type CompatibilityProfile, type ChatMessage } from "./gemini";
 import { parsedCues, totalCuesCount, type ParsedCue } from "./cuesData";
 import { Resend } from 'resend';
 
@@ -452,6 +452,56 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error initializing chat:", error);
       res.status(500).json({ error: "Failed to initialize chat" });
+    }
+  });
+
+  // CueChats - Initialize chat with a specific Cue (Brand, Location, Person)
+  app.post("/api/chat/init/cue", async (req, res) => {
+    const { odisId, cueId } = req.body;
+
+    if (!odisId || !cueId) {
+      return res.status(400).json({ error: "Missing odisId or cueId" });
+    }
+
+    try {
+      const user = await storage.getUserByOdisId(odisId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const cue = parsedCues.find(c => c.id === parseInt(cueId));
+      if (!cue) {
+        return res.status(404).json({ error: "Cue not found" });
+      }
+
+      // Build context for chat with the specific Cue
+      const { systemContext, firstName } = buildCueChatContext(
+        {
+          fullName: user.fullName,
+          birthDate: user.birthDate,
+          birthTime: user.birthTime || undefined,
+          birthLocation: user.birthLocation || undefined,
+        },
+        {
+          name: cue.name,
+          type: cue.type as any,
+          foundedOrBirth: new Date(cue.foundedOrBirth),
+          category: cue.category || undefined,
+          country: cue.country || undefined,
+          description: cue.description || undefined,
+        }
+      );
+
+      res.json({
+        success: true,
+        systemContext,
+        firstName,
+        cue,
+        message: `Direct message established with ${cue.name}. Their energetic resonance is now active.`
+      });
+    } catch (error) {
+      console.error("Error initializing cue chat:", error);
+      res.status(500).json({ error: "Failed to initialize cue chat" });
     }
   });
 
